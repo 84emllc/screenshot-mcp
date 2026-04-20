@@ -1,61 +1,148 @@
 // Copyright (c) 2026 84EM LLC (https://84em.io). MIT License.
 
-import type { Tool } from '@modelcontextprotocol/sdk/types.js';
+import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 
 export const tools: Tool[] = [
-  {
-    name: 'generate_screenshot',
-    description:
-      'Take a screenshot of a web page using Playwright. ' +
-      'Useful for generating OG images, visual regression snapshots, or page previews. ' +
-      'Returns the file path, dimensions, and file size of the saved PNG.',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        url: {
-          type: 'string',
-          description: 'URL to screenshot (e.g., http://localhost:1316/about/)',
-        },
-        output_path: {
-          type: 'string',
-          description: 'Absolute path to save the PNG file',
-        },
-        viewport_width: {
-          type: 'number',
-          description: 'Viewport width in pixels (default: 1200)',
-        },
-        viewport_height: {
-          type: 'number',
-          description: 'Viewport height in pixels (default: 630)',
-        },
-        device_scale_factor: {
-          type: 'number',
-          description: 'Device scale factor: 1 = standard, 2 = retina (default: 1)',
-        },
-        color_scheme: {
-          type: 'string',
-          enum: ['light', 'dark', 'no-preference'],
-          description: 'Preferred color scheme (default: no-preference)',
-        },
-        elements_to_hide: {
-          type: 'array',
-          items: { type: 'string' },
-          description: 'CSS selectors of elements to hide before taking the screenshot',
-        },
-        wait_for_selector: {
-          type: 'string',
-          description: 'CSS selector to wait for before taking the screenshot',
-        },
-        wait_for_timeout: {
-          type: 'number',
-          description: 'Extra milliseconds to wait after page load (default: 300)',
-        },
-        full_page: {
-          type: 'boolean',
-          description: 'Capture full scrollable page instead of viewport only (default: false)',
-        },
-      },
-      required: ['url', 'output_path'],
-    },
-  },
+	{
+		name: "generate_screenshot",
+		description:
+			"Take a screenshot of a web page using Playwright. " +
+			"Useful for generating OG images, visual regression snapshots, or page previews. " +
+			"Returns the file path, dimensions, and file size of the saved PNG.",
+		inputSchema: {
+			type: "object",
+			properties: {
+				url: {
+					type: "string",
+					description: "URL to screenshot (e.g., http://localhost:1316/about/)",
+				},
+				output_path: {
+					type: "string",
+					description: "Absolute path to save the PNG file",
+				},
+				viewport_width: {
+					type: "number",
+					description: "Viewport width in pixels (default: 1200)",
+				},
+				viewport_height: {
+					type: "number",
+					description: "Viewport height in pixels (default: 630)",
+				},
+				device_scale_factor: {
+					type: "number",
+					description:
+						"Device scale factor: 1 = standard, 2 = retina (default: 1)",
+				},
+				color_scheme: {
+					type: "string",
+					enum: ["light", "dark", "no-preference"],
+					description: "Preferred color scheme (default: no-preference)",
+				},
+				elements_to_hide: {
+					type: "array",
+					items: { type: "string" },
+					description:
+						"CSS selectors of elements to hide before taking the screenshot",
+				},
+				wait_for_selector: {
+					type: "string",
+					description: "CSS selector to wait for before taking the screenshot",
+				},
+				wait_for_timeout: {
+					type: "number",
+					description:
+						"Extra milliseconds to wait after page load (default: 300)",
+				},
+				full_page: {
+					type: "boolean",
+					description:
+						"Capture full scrollable page instead of viewport only (default: false)",
+				},
+			},
+			required: ["url", "output_path"],
+		},
+	},
+	{
+		name: "generate_responsive_mockup",
+		description:
+			"Capture a URL at three responsive breakpoints (desktop, tablet, mobile) and composite " +
+			"each into a device frame mockup. Writes RGBA PNGs to output_dir; optionally produces a " +
+			"horizontal composite. Returns file paths and dimensions.",
+		inputSchema: {
+			type: "object",
+			properties: {
+				url: { type: "string", description: "URL to capture" },
+				output_dir: {
+					type: "string",
+					description: "Absolute path to output directory",
+				},
+				filename_prefix: {
+					type: "string",
+					description: "Prefix for output filenames (default: hostname slug)",
+				},
+				widths: {
+					type: "array",
+					items: { type: "number" },
+					minItems: 3,
+					maxItems: 3,
+					description:
+						"Exactly three viewport widths [desktop, tablet, mobile] (default: [1440, 768, 375])",
+				},
+				frame_set: {
+					type: "string",
+					description: 'Frame set name from frames.json (default: "default")',
+				},
+				use_device_emulation: {
+					type: "boolean",
+					description: "Use Playwright device profiles (default: false)",
+				},
+				fit_mode: {
+					type: "string",
+					enum: ["top-crop", "full"],
+					description: 'How to fit screenshot into frame (default: "top-crop")',
+				},
+				composite: {
+					type: "boolean",
+					description: "Also emit composite.png (default: false)",
+				},
+				background: {
+					type: "string",
+					description:
+						'Composite background: "transparent" or "#rrggbb" (default: "transparent")',
+				},
+				keep_raw: {
+					type: "boolean",
+					description:
+						"Copy raw screenshots to output_dir/raw/ (default: false)",
+				},
+				wait_for_selector: {
+					type: "string",
+					description: "Wait for CSS selector before capture",
+				},
+				wait_for_timeout: {
+					type: "number",
+					description: "Extra ms to wait after page load (default: 300)",
+				},
+				elements_to_hide: {
+					type: "array",
+					items: { type: "string" },
+					description: "CSS selectors to hide before capture",
+				},
+				page_timeout_ms: {
+					type: "number",
+					description: "Page load timeout in ms (default: 30000)",
+				},
+				selector_timeout_ms: {
+					type: "number",
+					description: "wait_for_selector timeout in ms (default: 10000)",
+				},
+				retry_on_timeout: {
+					type: "boolean",
+					description:
+						"Retry once with relaxed waitUntil on timeout (default: true)",
+				},
+			},
+			required: ["url", "output_dir"],
+		},
+	},
 ];
