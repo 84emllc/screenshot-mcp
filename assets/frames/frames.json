@@ -1,0 +1,43 @@
+{
+  "default": {
+    "desktop": {
+      "image": "desktop.png",
+      "canvas": {
+        "width": 1480,
+        "height": 920
+      },
+      "screen": {
+        "x": 40,
+        "y": 40,
+        "width": 1400,
+        "height": 800
+      }
+    },
+    "tablet": {
+      "image": "tablet.png",
+      "canvas": {
+        "width": 720,
+        "height": 1000
+      },
+      "screen": {
+        "x": 36,
+        "y": 80,
+        "width": 648,
+        "height": 840
+      }
+    },
+    "mobile": {
+      "image": "mobile.png",
+      "canvas": {
+        "width": 360,
+        "height": 720
+      },
+      "screen": {
+        "x": 20,
+        "y": 70,
+        "width": 320,
+        "height": 580
+      }
+    }
+  }
+}
