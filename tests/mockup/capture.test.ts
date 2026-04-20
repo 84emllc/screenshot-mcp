@@ -53,6 +53,43 @@ describe("captureAll", () => {
 		}
 	});
 
+	it("retries with domcontentloaded after a timeout error", async () => {
+		let calls = 0;
+		(
+			takeScreenshot as unknown as { mockImplementation: (fn: unknown) => void }
+		).mockImplementation(
+			async (params: {
+				wait_until?: string;
+				viewport_width?: number;
+				output_path: string;
+			}) => {
+				calls++;
+				if (calls === 1) throw new Error("Timeout 30000ms exceeded");
+				return {
+					file_path: params.output_path,
+					width: params.viewport_width ?? 1200,
+					height: -1,
+					file_size_bytes: 1,
+					format: "png",
+				};
+			},
+		);
+		const out = await captureAll({
+			url: "https://example.com",
+			widths: [1440, 768, 375],
+			use_device_emulation: false,
+			page_timeout_ms: 30000,
+			selector_timeout_ms: 10000,
+			wait_for_timeout: 300,
+			elements_to_hide: [],
+		});
+		expect(out.breakpoints).toHaveLength(3);
+		expect(
+			(takeScreenshot as unknown as { mock: { calls: unknown[][] } }).mock.calls
+				.length,
+		).toBe(4);
+	});
+
 	it("rejects widths arrays that are not exactly length 3", async () => {
 		await expect(
 			captureAll({

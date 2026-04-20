@@ -50,7 +50,7 @@ export async function captureAll(opts: CaptureOpts): Promise<CaptureAllResult> {
 		const name = NAMES[i];
 		const width = opts.widths[i];
 		const outputPath = join(sessionDir, `${name}.png`);
-		const result = await takeScreenshot({
+		const baseParams = {
 			url: opts.url,
 			output_path: outputPath,
 			viewport_width: width,
@@ -60,7 +60,21 @@ export async function captureAll(opts: CaptureOpts): Promise<CaptureAllResult> {
 			wait_for_selector: opts.wait_for_selector,
 			wait_for_timeout: opts.wait_for_timeout,
 			elements_to_hide: opts.elements_to_hide,
-		});
+		};
+		let result: ScreenshotResult;
+		try {
+			result = await takeScreenshot(baseParams);
+		} catch (err) {
+			const message = (err as Error).message;
+			if (/timeout/i.test(message)) {
+				result = await takeScreenshot({
+					...baseParams,
+					wait_until: "domcontentloaded",
+				});
+			} else {
+				throw err;
+			}
+		}
 		breakpoints.push({ name, width, path: outputPath, result });
 	}
 

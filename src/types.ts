@@ -11,6 +11,7 @@ export interface ScreenshotParams {
 	wait_for_selector?: string;
 	wait_for_timeout?: number;
 	full_page?: boolean;
+	wait_until?: "load" | "domcontentloaded" | "networkidle" | "commit";
 }
 
 export interface ScreenshotResult {
