@@ -7,13 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-04-20
+
 ### Added
-- Design spec for `generate_responsive_mockup` tool and `responsive-mockup` CLI (see `docs/superpowers/specs/2026-04-20-responsive-mockup-design.md`).
+- generate_responsive_mockup MCP tool: capture URL at three breakpoints, composite each into a device frame, optional combined composite.
+- responsive-mockup CLI: same feature wrapped for command-line use.
+- Vitest test suite covering frames manifest loader, frame composition, composite stitching, capture orchestration, CLI argv parsing, and end-to-end integration against a static fixture.
+- Programmatic placeholder device frame assets in assets/frames/ with a JSON manifest; replaceable without code changes.
+- Page-load timeout retry: one retry with `domcontentloaded` if the initial `networkidle` wait times out.
 
 ## [1.0.0]
 
 ### Added
-- Initial MCP server with `generate_screenshot` tool.
+- Initial MCP server with generate_screenshot tool.
 - Chromium-based full-page screenshots via Playwright.
 - Configurable viewport, device scale factor, color scheme, element hiding, and selector/time waits.
 - Browser singleton reuse across tool calls.
