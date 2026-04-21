@@ -40,4 +40,20 @@ describe("CLI parseArgs", () => {
 	it("throws on missing url", () => {
 		expect(() => parseArgs(["--out", "/tmp/x"])).toThrow(/url/i);
 	});
+
+	it("parses --page-timeout, --selector-timeout, and --no-retry", () => {
+		const opts = parseArgs([
+			"https://example.com",
+			"--out",
+			"/tmp/x",
+			"--page-timeout",
+			"45000",
+			"--selector-timeout",
+			"5000",
+			"--no-retry",
+		]);
+		expect(opts.page_timeout_ms).toBe(45000);
+		expect(opts.selector_timeout_ms).toBe(5000);
+		expect(opts.retry_on_timeout).toBe(false);
+	});
 });

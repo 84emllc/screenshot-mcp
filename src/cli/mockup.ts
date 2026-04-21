@@ -17,6 +17,9 @@ const USAGE = `Usage: responsive-mockup <url> --out <dir> [options]
   --keep-raw                 keep raw screenshots in <out>/raw/
   --wait-for <selector>      wait for CSS selector before capture
   --wait-ms <n>              extra wait after load (default: 300)
+  --page-timeout <ms>        page load timeout (default: 30000)
+  --selector-timeout <ms>    wait_for_selector timeout (default: 10000)
+  --no-retry                 disable goto-timeout retry
   --hide <sel,sel,...>       hide elements before capture
   --version, --help`;
 
@@ -81,6 +84,15 @@ export function parseArgs(argv: string[]): MockupParams {
 				break;
 			case "--wait-ms":
 				out.wait_for_timeout = parseInt(next(), 10);
+				break;
+			case "--page-timeout":
+				out.page_timeout_ms = parseInt(next(), 10);
+				break;
+			case "--selector-timeout":
+				out.selector_timeout_ms = parseInt(next(), 10);
+				break;
+			case "--no-retry":
+				out.retry_on_timeout = false;
 				break;
 			case "--hide":
 				out.elements_to_hide = next().split(",");

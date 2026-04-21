@@ -2,7 +2,12 @@
 
 import { mkdir, stat } from "node:fs/promises";
 import { dirname } from "node:path";
-import { type Browser, type BrowserContext, chromium } from "playwright";
+import {
+	type Browser,
+	type BrowserContext,
+	chromium,
+	devices,
+} from "playwright";
 import type { ScreenshotParams, ScreenshotResult } from "./types.js";
 
 let browser: Browser | null = null;
@@ -31,22 +36,37 @@ export async function takeScreenshot(
 	const elementsToHide = params.elements_to_hide ?? [];
 	const waitTimeout = params.wait_for_timeout ?? 300;
 	const fullPage = params.full_page ?? false;
+	const pageTimeoutMs = params.page_timeout_ms ?? 30000;
+	const selectorTimeoutMs = params.selector_timeout_ms ?? 10000;
+
+	let deviceProfile: (typeof devices)[string] | undefined;
+	if (params.device_name) {
+		deviceProfile = devices[params.device_name];
+		if (!deviceProfile) {
+			throw new Error(`Unknown Playwright device: ${params.device_name}`);
+		}
+	}
 
 	const b = await getBrowser();
 
 	let context: BrowserContext | null = null;
 	try {
-		context = await b.newContext({
-			viewport: { width, height },
-			deviceScaleFactor: scaleFactor,
-			colorScheme,
-		});
+		context = deviceProfile
+			? await b.newContext({
+					...deviceProfile,
+					colorScheme,
+				})
+			: await b.newContext({
+					viewport: { width, height },
+					deviceScaleFactor: scaleFactor,
+					colorScheme,
+				});
 
 		const page = await context.newPage();
 
 		await page.goto(params.url, {
 			waitUntil: params.wait_until ?? "networkidle",
-			timeout: 30000,
+			timeout: pageTimeoutMs,
 		});
 
 		// Wait for fonts to finish loading
@@ -54,7 +74,9 @@ export async function takeScreenshot(
 
 		// Wait for a specific selector if requested
 		if (params.wait_for_selector) {
-			await page.waitForSelector(params.wait_for_selector, { timeout: 10000 });
+			await page.waitForSelector(params.wait_for_selector, {
+				timeout: selectorTimeoutMs,
+			});
 		}
 
 		// Hide elements
@@ -88,10 +110,14 @@ export async function takeScreenshot(
 
 		const fileStat = await stat(params.output_path);
 
+		const reportedWidth = deviceProfile?.viewport?.width ?? width;
+		const reportedHeight = deviceProfile?.viewport?.height ?? height;
+		const reportedScale = deviceProfile?.deviceScaleFactor ?? scaleFactor;
+
 		return {
 			file_path: params.output_path,
-			width: fullPage ? width : width * scaleFactor,
-			height: fullPage ? -1 : height * scaleFactor,
+			width: fullPage ? reportedWidth : reportedWidth * reportedScale,
+			height: fullPage ? -1 : reportedHeight * reportedScale,
 			file_size_bytes: fileStat.size,
 			format: "png",
 		};

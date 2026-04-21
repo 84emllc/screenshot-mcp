@@ -90,6 +90,30 @@ describe("captureAll", () => {
 		).toBe(4);
 	});
 
+	it("translates use_device_emulation into device_name for tablet and mobile only", async () => {
+		await captureAll({
+			url: "https://example.com",
+			widths: [1440, 768, 375],
+			use_device_emulation: true,
+			page_timeout_ms: 30000,
+			selector_timeout_ms: 10000,
+			wait_for_timeout: 300,
+			elements_to_hide: [],
+		});
+		const calls = (
+			takeScreenshot as unknown as { mock: { calls: unknown[][] } }
+		).mock.calls;
+		expect(
+			(calls[0][0] as { device_name?: string }).device_name,
+		).toBeUndefined();
+		expect((calls[1][0] as { device_name?: string }).device_name).toBe(
+			"iPad Pro 11",
+		);
+		expect((calls[2][0] as { device_name?: string }).device_name).toBe(
+			"iPhone 13",
+		);
+	});
+
 	it("rejects widths arrays that are not exactly length 3", async () => {
 		await expect(
 			captureAll({

@@ -15,6 +15,7 @@ export interface CaptureOpts {
 	wait_for_timeout: number;
 	elements_to_hide: string[];
 	wait_for_selector?: string;
+	retry_on_timeout?: boolean;
 }
 
 export interface CapturedBreakpoint {
@@ -35,6 +36,12 @@ const NAMES: Array<CapturedBreakpoint["name"]> = [
 	"mobile",
 ];
 
+const DEVICE_NAMES: Record<CapturedBreakpoint["name"], string | undefined> = {
+	desktop: undefined,
+	tablet: "iPad Pro 11",
+	mobile: "iPhone 13",
+};
+
 export async function captureAll(opts: CaptureOpts): Promise<CaptureAllResult> {
 	if (!Array.isArray(opts.widths) || opts.widths.length !== 3) {
 		throw new Error(
@@ -50,6 +57,9 @@ export async function captureAll(opts: CaptureOpts): Promise<CaptureAllResult> {
 		const name = NAMES[i];
 		const width = opts.widths[i];
 		const outputPath = join(sessionDir, `${name}.png`);
+		const deviceName = opts.use_device_emulation
+			? DEVICE_NAMES[name]
+			: undefined;
 		const baseParams = {
 			url: opts.url,
 			output_path: outputPath,
@@ -60,13 +70,16 @@ export async function captureAll(opts: CaptureOpts): Promise<CaptureAllResult> {
 			wait_for_selector: opts.wait_for_selector,
 			wait_for_timeout: opts.wait_for_timeout,
 			elements_to_hide: opts.elements_to_hide,
+			page_timeout_ms: opts.page_timeout_ms,
+			selector_timeout_ms: opts.selector_timeout_ms,
+			...(deviceName ? { device_name: deviceName } : {}),
 		};
 		let result: ScreenshotResult;
 		try {
 			result = await takeScreenshot(baseParams);
 		} catch (err) {
 			const message = (err as Error).message;
-			if (/timeout/i.test(message)) {
+			if (opts.retry_on_timeout !== false && /timeout/i.test(message)) {
 				result = await takeScreenshot({
 					...baseParams,
 					wait_until: "domcontentloaded",

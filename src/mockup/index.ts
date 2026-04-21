@@ -102,6 +102,7 @@ export async function run(params: MockupParams): Promise<MockupResult> {
 			wait_for_timeout: params.wait_for_timeout ?? 300,
 			elements_to_hide: params.elements_to_hide ?? [],
 			wait_for_selector: params.wait_for_selector,
+			retry_on_timeout: params.retry_on_timeout,
 		});
 		sessionDir = captured.sessionDir;
 
