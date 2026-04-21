@@ -11,10 +11,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - generate_responsive_mockup MCP tool: capture URL at three breakpoints, composite each into a device frame, optional combined composite.
-- responsive-mockup CLI: same feature wrapped for command-line use.
-- Vitest test suite covering frames manifest loader, frame composition, composite stitching, capture orchestration, CLI argv parsing, and end-to-end integration against a static fixture.
+- responsive-mockup CLI: same feature wrapped for command-line use, with --page-timeout, --selector-timeout, and --no-retry flags.
+- Configurable page-load and waitForSelector timeouts via page_timeout_ms / selector_timeout_ms.
+- Optional Playwright device emulation (use_device_emulation) for tablet (iPad Pro 11) and mobile (iPhone 13) breakpoints.
+- Page-load timeout retry: one retry with domcontentloaded if the initial networkidle wait times out, gated by retry_on_timeout.
+- Browser-crash retry: each breakpoint retries once with a fresh browser if the singleton crashes mid-run.
+- Vitest test suite (30 tests) covering frames manifest loader, frame composition, composite stitching, capture orchestration with retry paths, CLI argv parsing with NaN guards, and end-to-end integration against a static fixture (composite on/off, keep_raw on/off).
 - Programmatic placeholder device frame assets in assets/frames/ with a JSON manifest; replaceable without code changes.
-- Page-load timeout retry: one retry with `domcontentloaded` if the initial `networkidle` wait times out.
 
 ## [1.0.0]
 
