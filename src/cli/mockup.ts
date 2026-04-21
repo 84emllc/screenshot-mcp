@@ -82,15 +82,39 @@ export function parseArgs(argv: string[]): MockupParams {
 			case "--wait-for":
 				out.wait_for_selector = next();
 				break;
-			case "--wait-ms":
-				out.wait_for_timeout = parseInt(next(), 10);
+			case "--wait-ms": {
+				const raw = next();
+				const v = parseInt(raw, 10);
+				if (Number.isNaN(v) || v < 0) {
+					throw new Error(
+						`--wait-ms must be a non-negative integer, got "${raw}"`,
+					);
+				}
+				out.wait_for_timeout = v;
 				break;
-			case "--page-timeout":
-				out.page_timeout_ms = parseInt(next(), 10);
+			}
+			case "--page-timeout": {
+				const raw = next();
+				const v = parseInt(raw, 10);
+				if (Number.isNaN(v) || v < 0) {
+					throw new Error(
+						`--page-timeout must be a non-negative integer, got "${raw}"`,
+					);
+				}
+				out.page_timeout_ms = v;
 				break;
-			case "--selector-timeout":
-				out.selector_timeout_ms = parseInt(next(), 10);
+			}
+			case "--selector-timeout": {
+				const raw = next();
+				const v = parseInt(raw, 10);
+				if (Number.isNaN(v) || v < 0) {
+					throw new Error(
+						`--selector-timeout must be a non-negative integer, got "${raw}"`,
+					);
+				}
+				out.selector_timeout_ms = v;
 				break;
+			}
 			case "--no-retry":
 				out.retry_on_timeout = false;
 				break;

@@ -41,6 +41,24 @@ describe("CLI parseArgs", () => {
 		expect(() => parseArgs(["--out", "/tmp/x"])).toThrow(/url/i);
 	});
 
+	it("rejects non-numeric --wait-ms", () => {
+		expect(() =>
+			parseArgs(["url", "--out", "/tmp", "--wait-ms", "abc"]),
+		).toThrow(/--wait-ms/);
+	});
+
+	it("rejects non-numeric --page-timeout", () => {
+		expect(() =>
+			parseArgs(["url", "--out", "/tmp", "--page-timeout", "abc"]),
+		).toThrow(/--page-timeout/);
+	});
+
+	it("rejects non-numeric --selector-timeout", () => {
+		expect(() =>
+			parseArgs(["url", "--out", "/tmp", "--selector-timeout", "abc"]),
+		).toThrow(/--selector-timeout/);
+	});
+
 	it("parses --page-timeout, --selector-timeout, and --no-retry", () => {
 		const opts = parseArgs([
 			"https://example.com",
