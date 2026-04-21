@@ -62,9 +62,9 @@ describe("responsive mockup end-to-end", () => {
 			expect(s.size).toBeGreaterThan(0);
 		}
 
-		expect(result.breakpoints[0].framed_dimensions).toEqual([1480, 920]);
-		expect(result.breakpoints[1].framed_dimensions).toEqual([720, 1000]);
-		expect(result.breakpoints[2].framed_dimensions).toEqual([360, 720]);
+		expect(result.breakpoints[0].framed_dimensions).toEqual([1480, 1040]);
+		expect(result.breakpoints[1].framed_dimensions).toEqual([2068, 2788]);
+		expect(result.breakpoints[2].framed_dimensions).toEqual([1406, 2822]);
 	}, 60000);
 
 	it("omits composite output when composite is false", async () => {
