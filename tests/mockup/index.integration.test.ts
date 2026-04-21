@@ -1,6 +1,6 @@
 // Copyright (c) 2026 84EM LLC (https://84em.io). MIT License.
 
-import { mkdir, readFile, rm, stat } from "node:fs/promises";
+import { access, mkdir, readdir, readFile, rm, stat } from "node:fs/promises";
 import { createServer, type Server } from "node:http";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -10,7 +10,7 @@ import { closeBrowser } from "../../src/screenshot.js";
 
 let server: Server;
 let port: number;
-let outDir: string;
+let baseDir: string;
 
 beforeAll(async () => {
 	const html = await readFile(
@@ -25,18 +25,20 @@ beforeAll(async () => {
 		server.listen(0, "127.0.0.1", () => resolve()),
 	);
 	port = (server.address() as { port: number }).port;
-	outDir = join(tmpdir(), `mockup-int-${Date.now()}`);
-	await mkdir(outDir, { recursive: true });
+	baseDir = join(tmpdir(), `mockup-int-${Date.now()}`);
+	await mkdir(baseDir, { recursive: true });
 });
 
 afterAll(async () => {
 	await new Promise<void>((resolve) => server.close(() => resolve()));
 	await closeBrowser();
-	await rm(outDir, { recursive: true, force: true });
+	await rm(baseDir, { recursive: true, force: true });
 });
 
 describe("responsive mockup end-to-end", () => {
 	it("produces three framed PNGs and a composite at expected dimensions", async () => {
+		const outDir = join(baseDir, "with-composite");
+		await mkdir(outDir, { recursive: true });
 		const result = await run({
 			url: `http://127.0.0.1:${port}/`,
 			output_dir: outDir,
@@ -63,5 +65,38 @@ describe("responsive mockup end-to-end", () => {
 		expect(result.breakpoints[0].framed_dimensions).toEqual([1480, 920]);
 		expect(result.breakpoints[1].framed_dimensions).toEqual([720, 1000]);
 		expect(result.breakpoints[2].framed_dimensions).toEqual([360, 720]);
+	}, 60000);
+
+	it("omits composite output when composite is false", async () => {
+		const outDir = join(baseDir, "no-composite");
+		await mkdir(outDir, { recursive: true });
+		const result = await run({
+			url: `http://127.0.0.1:${port}/`,
+			output_dir: outDir,
+			filename_prefix: "fixture",
+			composite: false,
+		});
+
+		expect(result.files.composite).toBeNull();
+		const entries = await readdir(outDir);
+		expect(entries.some((e) => e.endsWith("-composite.png"))).toBe(false);
+	}, 60000);
+
+	it("copies raw screenshots into output_dir/raw/ when keep_raw is true", async () => {
+		const outDir = join(baseDir, "keep-raw");
+		await mkdir(outDir, { recursive: true });
+		await run({
+			url: `http://127.0.0.1:${port}/`,
+			output_dir: outDir,
+			filename_prefix: "fixture",
+			keep_raw: true,
+		});
+
+		const rawDir = join(outDir, "raw");
+		await access(rawDir);
+		const rawEntries = await readdir(rawDir);
+		expect(rawEntries.sort()).toEqual(
+			["desktop.png", "mobile.png", "tablet.png"].sort(),
+		);
 	}, 60000);
 });
