@@ -71,7 +71,7 @@ export async function takeScreenshot(
 			});
 		} catch (err) {
 			const e = err as Error;
-			if (e.name === "TimeoutError" || /timeout/i.test(e.message)) {
+			if (e.name === "TimeoutError") {
 				throw new Error(`PAGE_LOAD_TIMEOUT: ${e.message}`);
 			}
 			throw err;
@@ -88,7 +88,7 @@ export async function takeScreenshot(
 				});
 			} catch (err) {
 				const e = err as Error;
-				if (e.name === "TimeoutError" || /timeout/i.test(e.message)) {
+				if (e.name === "TimeoutError") {
 					throw new Error(`SELECTOR_TIMEOUT: ${e.message}`);
 				}
 				throw err;
