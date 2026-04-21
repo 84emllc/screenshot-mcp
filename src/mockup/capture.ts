@@ -74,19 +74,35 @@ export async function captureAll(opts: CaptureOpts): Promise<CaptureAllResult> {
 			selector_timeout_ms: opts.selector_timeout_ms,
 			...(deviceName ? { device_name: deviceName } : {}),
 		};
+		const captureOne = async (): Promise<ScreenshotResult> => {
+			try {
+				return await takeScreenshot(baseParams);
+			} catch (err) {
+				const message = (err as Error).message;
+				if (
+					opts.retry_on_timeout !== false &&
+					message.startsWith("PAGE_LOAD_TIMEOUT:")
+				) {
+					return await takeScreenshot({
+						...baseParams,
+						wait_until: "domcontentloaded",
+					});
+				}
+				throw err;
+			}
+		};
+
 		let result: ScreenshotResult;
 		try {
-			result = await takeScreenshot(baseParams);
+			result = await captureOne();
 		} catch (err) {
 			const message = (err as Error).message;
 			if (
-				opts.retry_on_timeout !== false &&
-				message.startsWith("PAGE_LOAD_TIMEOUT:")
+				/target closed|browser (?:has been )?closed|browserContext\.newPage/i.test(
+					message,
+				)
 			) {
-				result = await takeScreenshot({
-					...baseParams,
-					wait_until: "domcontentloaded",
-				});
+				result = await captureOne();
 			} else {
 				throw err;
 			}
