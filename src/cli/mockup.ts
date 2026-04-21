@@ -23,7 +23,7 @@ const USAGE = `Usage: responsive-mockup <url> --out <dir> [options]
   --hide <sel,sel,...>       hide elements before capture
   --version, --help`;
 
-const VERSION = "1.1.0";
+const VERSION = "1.1.1";
 
 export function parseArgs(argv: string[]): MockupParams {
 	const positional: string[] = [];
