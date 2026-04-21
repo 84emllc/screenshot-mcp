@@ -11,7 +11,7 @@ import { handleToolCall } from "./handler.js";
 import { closeBrowser } from "./screenshot.js";
 import { tools } from "./tools.js";
 
-const VERSION = "1.1.1";
+const VERSION = "1.2.0";
 
 if (process.argv.includes("--version")) {
 	console.log(VERSION);
