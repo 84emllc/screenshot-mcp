@@ -1,7 +1,15 @@
 // Copyright (c) 2026 84EM LLC (https://84em.io). MIT License.
 
 import { constants as fsConstants } from "node:fs";
-import { access, copyFile, mkdir, rm, stat, writeFile } from "node:fs/promises";
+import {
+	access,
+	copyFile,
+	mkdir,
+	rm,
+	rmdir,
+	stat,
+	writeFile,
+} from "node:fs/promises";
 import { basename, dirname, join, resolve } from "node:path";
 import { URL } from "node:url";
 import type {
@@ -91,6 +99,7 @@ export async function run(params: MockupParams): Promise<MockupResult> {
 	const prefix = params.filename_prefix ?? slugifyHost(params.url);
 	const writtenByThisRun: string[] = [];
 	let sessionDir: string | null = null;
+	let createdRawDir: string | null = null;
 
 	try {
 		const captured = await captureAll({
@@ -143,7 +152,12 @@ export async function run(params: MockupParams): Promise<MockupResult> {
 
 		if (params.keep_raw) {
 			const rawDir = join(params.output_dir, "raw");
-			await mkdir(rawDir, { recursive: true });
+			try {
+				await mkdir(rawDir);
+				createdRawDir = rawDir;
+			} catch (err) {
+				if ((err as NodeJS.ErrnoException).code !== "EEXIST") throw err;
+			}
 			for (const cap of captured.breakpoints) {
 				const dest = join(rawDir, basename(cap.path));
 				await copyFile(cap.path, dest);
@@ -159,6 +173,13 @@ export async function run(params: MockupParams): Promise<MockupResult> {
 	} catch (err) {
 		for (const p of writtenByThisRun) {
 			await rm(p, { force: true });
+		}
+		if (createdRawDir) {
+			try {
+				await rmdir(createdRawDir);
+			} catch {
+				// not empty (pre-existing files), leave it
+			}
 		}
 		throw err;
 	} finally {
