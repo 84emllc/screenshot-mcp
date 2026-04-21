@@ -88,6 +88,37 @@ describe("loadFrames", () => {
 		await expect(loadFrames("default", broken)).rejects.toThrow(/missing\.png/);
 	});
 
+	it("throws if a screen dimension is zero or negative", async () => {
+		const broken = join(tmp, "zero-dim");
+		await mkdir(broken, { recursive: true });
+		await writeFile(join(broken, "frame.png"), Buffer.alloc(0));
+		await writeFile(
+			join(broken, "frames.json"),
+			JSON.stringify({
+				default: {
+					desktop: {
+						image: "frame.png",
+						canvas: { width: 100, height: 100 },
+						screen: { x: 0, y: 0, width: 0, height: 50 },
+					},
+					tablet: {
+						image: "frame.png",
+						canvas: { width: 100, height: 100 },
+						screen: { x: 0, y: 0, width: 50, height: 50 },
+					},
+					mobile: {
+						image: "frame.png",
+						canvas: { width: 100, height: 100 },
+						screen: { x: 0, y: 0, width: 50, height: 50 },
+					},
+				},
+			}),
+		);
+		await expect(loadFrames("default", broken)).rejects.toThrow(
+			/screen dimensions must be positive/,
+		);
+	});
+
 	it("throws if screen extends beyond canvas", async () => {
 		const broken = join(tmp, "oob");
 		await mkdir(broken, { recursive: true });

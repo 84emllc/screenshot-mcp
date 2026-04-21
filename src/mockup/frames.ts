@@ -31,6 +31,11 @@ function validateFrame(name: string, frame: FrameDef): void {
 		}
 	}
 	const { canvas, screen } = frame;
+	if (screen.width <= 0 || screen.height <= 0) {
+		throw new Error(
+			`Frame "${name}" screen dimensions must be positive (got ${screen.width}x${screen.height})`,
+		);
+	}
 	if (
 		screen.x < 0 ||
 		screen.y < 0 ||
