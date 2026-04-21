@@ -51,11 +51,14 @@ export interface FrameSet {
 	mobile: FrameDef;
 }
 
+export type BreakpointName = "desktop" | "tablet" | "mobile";
+
 export interface MockupParams {
 	url: string;
 	output_dir: string;
 	filename_prefix?: string;
-	widths?: [number, number, number];
+	breakpoints?: BreakpointName[];
+	widths?: number[];
 	frame_set?: string;
 	use_device_emulation?: boolean;
 	fit_mode?: FitMode;
@@ -71,7 +74,7 @@ export interface MockupParams {
 }
 
 export interface MockupBreakpointResult {
-	name: "desktop" | "tablet" | "mobile";
+	name: BreakpointName;
 	width: number;
 	framed_dimensions: [number, number];
 	file_size_bytes: number;
@@ -80,9 +83,9 @@ export interface MockupBreakpointResult {
 export interface MockupResult {
 	output_dir: string;
 	files: {
-		desktop: string;
-		tablet: string;
-		mobile: string;
+		desktop?: string;
+		tablet?: string;
+		mobile?: string;
 		composite: string | null;
 	};
 	breakpoints: MockupBreakpointResult[];

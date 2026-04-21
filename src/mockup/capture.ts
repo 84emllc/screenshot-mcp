@@ -4,11 +4,12 @@ import { mkdir } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { takeScreenshot } from "../screenshot.js";
-import type { ScreenshotResult } from "../types.js";
+import type { BreakpointName, ScreenshotResult } from "../types.js";
 
 export interface CaptureOpts {
 	url: string;
-	widths: [number, number, number];
+	breakpoints: BreakpointName[];
+	widths: number[];
 	use_device_emulation: boolean;
 	page_timeout_ms: number;
 	selector_timeout_ms: number;
@@ -19,7 +20,7 @@ export interface CaptureOpts {
 }
 
 export interface CapturedBreakpoint {
-	name: "desktop" | "tablet" | "mobile";
+	name: BreakpointName;
 	width: number;
 	path: string;
 	result: ScreenshotResult;
@@ -30,22 +31,22 @@ export interface CaptureAllResult {
 	sessionDir: string;
 }
 
-const NAMES: Array<CapturedBreakpoint["name"]> = [
-	"desktop",
-	"tablet",
-	"mobile",
-];
-
-const DEVICE_NAMES: Record<CapturedBreakpoint["name"], string | undefined> = {
+const DEVICE_NAMES: Record<BreakpointName, string | undefined> = {
 	desktop: undefined,
 	tablet: "iPad Pro 11",
 	mobile: "iPhone 13",
 };
 
 export async function captureAll(opts: CaptureOpts): Promise<CaptureAllResult> {
-	if (!Array.isArray(opts.widths) || opts.widths.length !== 3) {
+	if (!Array.isArray(opts.breakpoints) || opts.breakpoints.length === 0) {
+		throw new Error("breakpoints must be a non-empty array");
+	}
+	if (!Array.isArray(opts.widths) || opts.widths.length === 0) {
+		throw new Error("widths must be a non-empty array");
+	}
+	if (opts.breakpoints.length !== opts.widths.length) {
 		throw new Error(
-			"widths must contain exactly three values: [desktop, tablet, mobile]",
+			`widths length (${opts.widths.length}) must match breakpoints length (${opts.breakpoints.length})`,
 		);
 	}
 
@@ -53,8 +54,8 @@ export async function captureAll(opts: CaptureOpts): Promise<CaptureAllResult> {
 	await mkdir(sessionDir, { recursive: true });
 	const breakpoints: CapturedBreakpoint[] = [];
 
-	for (let i = 0; i < 3; i++) {
-		const name = NAMES[i];
+	for (let i = 0; i < opts.breakpoints.length; i++) {
+		const name = opts.breakpoints[i];
 		const width = opts.widths[i];
 		const outputPath = join(sessionDir, `${name}.png`);
 		const deviceName = opts.use_device_emulation

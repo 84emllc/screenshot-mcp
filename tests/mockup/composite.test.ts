@@ -77,4 +77,23 @@ describe("stitch", () => {
 		expect(data[i + 1]).toBe(255);
 		expect(data[i + 2]).toBe(255);
 	});
+
+	it("composites only desktop and mobile when tablet is omitted", async () => {
+		const out = await stitch(
+			{
+				desktop: join(tmp, "d.png"),
+				mobile: join(tmp, "m.png"),
+			},
+			"transparent",
+		);
+		const meta = await sharp(out).metadata();
+		// 400 + 100 widths + 1 gap of 60 + 2 padding of 80 = 720
+		expect(meta.width).toBe(720);
+		// max(300, 200) + 2 padding of 80 = 460
+		expect(meta.height).toBe(460);
+	});
+
+	it("rejects an empty paths object", async () => {
+		await expect(stitch({}, "transparent")).rejects.toThrow(/at least one/i);
+	});
 });

@@ -65,7 +65,7 @@ export const tools: Tool[] = [
 	{
 		name: "generate_responsive_mockup",
 		description:
-			"Capture a URL at three responsive breakpoints (desktop, tablet, mobile) and composite " +
+			"Capture a URL at one or more responsive breakpoints (desktop, tablet, mobile) and composite " +
 			"each into a device frame mockup. Writes RGBA PNGs to output_dir; optionally produces a " +
 			"horizontal composite. Returns file paths and dimensions.",
 		inputSchema: {
@@ -80,13 +80,24 @@ export const tools: Tool[] = [
 					type: "string",
 					description: "Prefix for output filenames (default: hostname slug)",
 				},
+				breakpoints: {
+					type: "array",
+					items: {
+						type: "string",
+						enum: ["desktop", "tablet", "mobile"],
+					},
+					minItems: 1,
+					maxItems: 3,
+					description:
+						'Breakpoints to capture (default: ["desktop", "mobile"])',
+				},
 				widths: {
 					type: "array",
 					items: { type: "number" },
-					minItems: 3,
+					minItems: 1,
 					maxItems: 3,
 					description:
-						"Exactly three viewport widths [desktop, tablet, mobile] (default: [1440, 768, 375])",
+						"Per-breakpoint viewport widths, paired by index with breakpoints (default: per-breakpoint defaults)",
 				},
 				frame_set: {
 					type: "string",

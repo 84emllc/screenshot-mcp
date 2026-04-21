@@ -36,7 +36,7 @@ afterAll(async () => {
 });
 
 describe("responsive mockup end-to-end", () => {
-	it("produces three framed PNGs and a composite at expected dimensions", async () => {
+	it("produces desktop+mobile framed PNGs and a composite by default", async () => {
 		const outDir = join(baseDir, "with-composite");
 		await mkdir(outDir, { recursive: true });
 		const result = await run({
@@ -48,23 +48,41 @@ describe("responsive mockup end-to-end", () => {
 		});
 
 		expect(result.files.desktop).toMatch(/fixture-desktop\.png$/);
-		expect(result.files.tablet).toMatch(/fixture-tablet\.png$/);
 		expect(result.files.mobile).toMatch(/fixture-mobile\.png$/);
+		expect(result.files.tablet).toBeUndefined();
 		expect(result.files.composite).toMatch(/fixture-composite\.png$/);
+		expect(result.breakpoints).toHaveLength(2);
 
 		for (const f of [
-			result.files.desktop,
-			result.files.tablet,
-			result.files.mobile,
+			result.files.desktop as string,
+			result.files.mobile as string,
 			result.files.composite as string,
 		]) {
 			const s = await stat(f);
 			expect(s.size).toBeGreaterThan(0);
 		}
 
-		expect(result.breakpoints[0].framed_dimensions).toEqual([1480, 920]);
-		expect(result.breakpoints[1].framed_dimensions).toEqual([720, 1000]);
-		expect(result.breakpoints[2].framed_dimensions).toEqual([360, 720]);
+		expect(result.breakpoints[0].framed_dimensions).toEqual([1480, 1040]);
+		expect(result.breakpoints[1].framed_dimensions).toEqual([1406, 2822]);
+	}, 60000);
+
+	it("captures all three breakpoints when tablet is requested", async () => {
+		const outDir = join(baseDir, "all-three");
+		await mkdir(outDir, { recursive: true });
+		const result = await run({
+			url: `http://127.0.0.1:${port}/`,
+			output_dir: outDir,
+			filename_prefix: "fixture",
+			breakpoints: ["desktop", "tablet", "mobile"],
+		});
+
+		expect(result.files.desktop).toMatch(/fixture-desktop\.png$/);
+		expect(result.files.tablet).toMatch(/fixture-tablet\.png$/);
+		expect(result.files.mobile).toMatch(/fixture-mobile\.png$/);
+		expect(result.breakpoints).toHaveLength(3);
+		expect(result.breakpoints[0].framed_dimensions).toEqual([1480, 1040]);
+		expect(result.breakpoints[1].framed_dimensions).toEqual([2068, 2788]);
+		expect(result.breakpoints[2].framed_dimensions).toEqual([1406, 2822]);
 	}, 60000);
 
 	it("omits composite output when composite is false", async () => {
@@ -95,8 +113,6 @@ describe("responsive mockup end-to-end", () => {
 		const rawDir = join(outDir, "raw");
 		await access(rawDir);
 		const rawEntries = await readdir(rawDir);
-		expect(rawEntries.sort()).toEqual(
-			["desktop.png", "mobile.png", "tablet.png"].sort(),
-		);
+		expect(rawEntries.sort()).toEqual(["desktop.png", "mobile.png"].sort());
 	}, 60000);
 });

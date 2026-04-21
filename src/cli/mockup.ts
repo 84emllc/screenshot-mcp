@@ -2,13 +2,16 @@
 // Copyright (c) 2026 84EM LLC (https://84em.io). MIT License.
 
 import { run } from "../mockup/index.js";
-import type { FitMode, MockupParams } from "../types.js";
+import type { BreakpointName, FitMode, MockupParams } from "../types.js";
 
 const USAGE = `Usage: responsive-mockup <url> --out <dir> [options]
 
   --out <dir>                output directory (required)
   --prefix <str>             filename prefix (default: hostname slug)
-  --widths <a,b,c>           comma-separated widths (default: 1440,768,375)
+  --breakpoints <a,b,c>      comma-separated breakpoint names (default: desktop,mobile)
+                             allowed: desktop, tablet, mobile
+  --widths <a,b,...>         comma-separated widths, paired by index with breakpoints
+                             (default: per-breakpoint defaults; desktop=1440, tablet=768, mobile=375)
   --frame-set <name>         frame set (default: "default")
   --device-emulation         use Playwright device profiles
   --fit <mode>               top-crop | full (default: top-crop)
@@ -23,7 +26,13 @@ const USAGE = `Usage: responsive-mockup <url> --out <dir> [options]
   --hide <sel,sel,...>       hide elements before capture
   --version, --help`;
 
-const VERSION = "1.1.0";
+const VERSION = "1.2.0";
+
+const VALID_BREAKPOINTS: ReadonlySet<string> = new Set([
+	"desktop",
+	"tablet",
+	"mobile",
+]);
 
 export function parseArgs(argv: string[]): MockupParams {
 	const positional: string[] = [];
@@ -44,16 +53,50 @@ export function parseArgs(argv: string[]): MockupParams {
 			case "--prefix":
 				out.filename_prefix = next();
 				break;
+			case "--breakpoints": {
+				const parts = next()
+					.split(",")
+					.map((s) => s.trim());
+				if (parts.length === 0 || parts.some((p) => p.length === 0)) {
+					throw new Error(
+						"--breakpoints must be a non-empty comma-separated list",
+					);
+				}
+				if (parts.length > 3) {
+					throw new Error(
+						"--breakpoints accepts at most three values (desktop, tablet, mobile)",
+					);
+				}
+				const seen = new Set<string>();
+				for (const p of parts) {
+					if (!VALID_BREAKPOINTS.has(p)) {
+						throw new Error(
+							`--breakpoints contains unknown name "${p}" (must be one of: desktop, tablet, mobile)`,
+						);
+					}
+					if (seen.has(p)) {
+						throw new Error(`--breakpoints contains duplicate "${p}"`);
+					}
+					seen.add(p);
+				}
+				out.breakpoints = parts as BreakpointName[];
+				break;
+			}
 			case "--widths": {
 				const parts = next()
 					.split(",")
 					.map((s) => parseInt(s, 10));
-				if (parts.length !== 3 || parts.some(Number.isNaN)) {
+				if (parts.length === 0 || parts.some(Number.isNaN)) {
 					throw new Error(
-						"--widths must be three integers separated by commas",
+						"--widths must be a comma-separated list of integers (length must match --breakpoints)",
 					);
 				}
-				out.widths = [parts[0], parts[1], parts[2]];
+				if (parts.length > 3) {
+					throw new Error(
+						"--widths accepts at most three values (one per breakpoint)",
+					);
+				}
+				out.widths = parts;
 				break;
 			}
 			case "--frame-set":

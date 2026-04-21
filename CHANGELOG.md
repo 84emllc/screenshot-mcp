@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-04-20
+
+### Changed
+- Default breakpoints reduced from `["desktop", "tablet", "mobile"]` to `["desktop", "mobile"]`. Tablet is now opt-in via `breakpoints: ["desktop", "tablet", "mobile"]`.
+- `widths` is now a variable-length `number[]` paired positionally with `breakpoints` (was a fixed 3-tuple).
+- `MockupResult.files.desktop`, `tablet`, and `mobile` are now optional; only the requested breakpoints appear.
+
+### Added
+- `breakpoints` MockupParam and `--breakpoints desktop,mobile,tablet` CLI flag.
+- Exported `BreakpointName` type.
+
+### Migration
+- Anyone calling the MCP tool with `widths: [1440, 768, 375]` and expecting all three breakpoints must now also pass `breakpoints: ["desktop", "tablet", "mobile"]`.
+- CLI users on `--widths 1440,768,375` should add `--breakpoints desktop,tablet,mobile`.
+
+## [1.1.1] - 2026-04-20
+
+### Changed
+- Replaced programmatic placeholder tablet and mobile frames with real device PNGs from `jonnyjackson26/device-frames-media`: iPad Pro 11 portrait silver and iPhone 16 Pro black titanium.
+- Improved the generated desktop frame: silver bezel, rounded corners, integrated stand and neck (canvas grew from 1480x920 to 1480x1040 to accommodate the stand).
+
+### Added
+- `assets/frames/SOURCES.md` documenting the origin and license of each bundled frame.
+- `scripts/generate-frames.mjs` now generates only the desktop frame; tablet and mobile are downloaded.
+
 ## [1.1.0] - 2026-04-20
 
 ### Added

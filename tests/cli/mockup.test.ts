@@ -9,6 +9,8 @@ describe("CLI parseArgs", () => {
 		expect(opts.url).toBe("https://example.com");
 		expect(opts.output_dir).toBe("/tmp/x");
 		expect(opts.composite).toBeUndefined();
+		expect(opts.breakpoints).toBeUndefined();
+		expect(opts.widths).toBeUndefined();
 	});
 
 	it("parses widths and fit and background and composite flag", () => {
@@ -31,6 +33,40 @@ describe("CLI parseArgs", () => {
 		expect(opts.background).toBe("#ffffff");
 		expect(opts.composite).toBe(true);
 		expect(opts.elements_to_hide).toEqual([".foo", ".bar"]);
+	});
+
+	it("parses variable-length --widths without --breakpoints (length checked downstream)", () => {
+		const opts = parseArgs([
+			"https://example.com",
+			"--out",
+			"/tmp/x",
+			"--widths",
+			"1920,400",
+		]);
+		expect(opts.widths).toEqual([1920, 400]);
+	});
+
+	it("parses --breakpoints", () => {
+		const opts = parseArgs([
+			"https://example.com",
+			"--out",
+			"/tmp",
+			"--breakpoints",
+			"desktop,mobile",
+		]);
+		expect(opts.breakpoints).toEqual(["desktop", "mobile"]);
+	});
+
+	it("rejects --breakpoints with an unknown name", () => {
+		expect(() =>
+			parseArgs(["url", "--out", "/tmp", "--breakpoints", "desktop,foo"]),
+		).toThrow(/unknown name/i);
+	});
+
+	it("rejects --breakpoints with duplicates", () => {
+		expect(() =>
+			parseArgs(["url", "--out", "/tmp", "--breakpoints", "desktop,desktop"]),
+		).toThrow(/duplicate/i);
 	});
 
 	it("throws on missing --out", () => {

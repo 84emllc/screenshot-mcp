@@ -4,7 +4,7 @@
       "image": "desktop.png",
       "canvas": {
         "width": 1480,
-        "height": 920
+        "height": 1040
       },
       "screen": {
         "x": 40,
@@ -16,27 +16,27 @@
     "tablet": {
       "image": "tablet.png",
       "canvas": {
-        "width": 720,
-        "height": 1000
+        "width": 2068,
+        "height": 2788
       },
       "screen": {
-        "x": 36,
-        "y": 80,
-        "width": 648,
-        "height": 840
+        "x": 200,
+        "y": 200,
+        "width": 1668,
+        "height": 2388
       }
     },
     "mobile": {
       "image": "mobile.png",
       "canvas": {
-        "width": 360,
-        "height": 720
+        "width": 1406,
+        "height": 2822
       },
       "screen": {
-        "x": 20,
-        "y": 70,
-        "width": 320,
-        "height": 580
+        "x": 102,
+        "y": 100,
+        "width": 1206,
+        "height": 2622
       }
     }
   }

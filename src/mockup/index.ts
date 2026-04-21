@@ -13,6 +13,7 @@ import {
 import { basename, dirname, join, resolve } from "node:path";
 import { URL } from "node:url";
 import type {
+	BreakpointName,
 	MockupBreakpointResult,
 	MockupParams,
 	MockupResult,
@@ -21,6 +22,18 @@ import { captureAll } from "./capture.js";
 import { stitch } from "./composite.js";
 import { frameImage } from "./frame.js";
 import { loadFrames } from "./frames.js";
+
+const DEFAULT_BREAKPOINTS: BreakpointName[] = ["desktop", "mobile"];
+const DEFAULT_WIDTHS: Record<BreakpointName, number> = {
+	desktop: 1440,
+	tablet: 768,
+	mobile: 375,
+};
+const VALID_BREAKPOINTS: ReadonlySet<BreakpointName> = new Set([
+	"desktop",
+	"tablet",
+	"mobile",
+]);
 
 function slugifyHost(urlStr: string): string {
 	const u = new URL(urlStr);
@@ -83,15 +96,67 @@ function validateUrl(urlStr: string): void {
 	}
 }
 
+function validateBreakpoints(input: unknown): BreakpointName[] {
+	if (!Array.isArray(input) || input.length === 0) {
+		throw new Error("breakpoints must be a non-empty array");
+	}
+	const seen = new Set<string>();
+	const result: BreakpointName[] = [];
+	for (const entry of input) {
+		if (
+			typeof entry !== "string" ||
+			!VALID_BREAKPOINTS.has(entry as BreakpointName)
+		) {
+			throw new Error(
+				`Unknown breakpoint "${String(entry)}" (must be one of: desktop, tablet, mobile)`,
+			);
+		}
+		if (seen.has(entry)) {
+			throw new Error(`Duplicate breakpoint "${entry}"`);
+		}
+		seen.add(entry);
+		result.push(entry as BreakpointName);
+	}
+	return result;
+}
+
+function validateWidths(
+	input: number[] | undefined,
+	breakpoints: BreakpointName[],
+): number[] {
+	if (input === undefined) {
+		return breakpoints.map((name) => DEFAULT_WIDTHS[name]);
+	}
+	if (!Array.isArray(input)) {
+		throw new Error("widths must be an array of positive integers");
+	}
+	if (input.length !== breakpoints.length) {
+		throw new Error(
+			`widths length (${input.length}) must match breakpoints length (${breakpoints.length})`,
+		);
+	}
+	for (const w of input) {
+		if (
+			typeof w !== "number" ||
+			!Number.isFinite(w) ||
+			!Number.isInteger(w) ||
+			w <= 0
+		) {
+			throw new Error(
+				`widths must contain positive finite integers, got ${String(w)}`,
+			);
+		}
+	}
+	return input;
+}
+
 export async function run(params: MockupParams): Promise<MockupResult> {
 	validateUrl(params.url);
 
-	const widths = params.widths ?? [1440, 768, 375];
-	if (!Array.isArray(widths) || widths.length !== 3) {
-		throw new Error(
-			"widths must contain exactly three values: [desktop, tablet, mobile]",
-		);
-	}
+	const breakpoints = validateBreakpoints(
+		params.breakpoints ?? DEFAULT_BREAKPOINTS,
+	);
+	const widths = validateWidths(params.widths, breakpoints);
 
 	await ensureWritableDir(params.output_dir);
 
@@ -104,7 +169,8 @@ export async function run(params: MockupParams): Promise<MockupResult> {
 	try {
 		const captured = await captureAll({
 			url: params.url,
-			widths: widths as [number, number, number],
+			breakpoints,
+			widths,
 			use_device_emulation: params.use_device_emulation ?? false,
 			page_timeout_ms: params.page_timeout_ms ?? 30000,
 			selector_timeout_ms: params.selector_timeout_ms ?? 10000,
@@ -117,11 +183,7 @@ export async function run(params: MockupParams): Promise<MockupResult> {
 
 		const fit = params.fit_mode ?? "top-crop";
 		const breakpointResults: MockupBreakpointResult[] = [];
-		const framedPaths: { desktop: string; tablet: string; mobile: string } = {
-			desktop: "",
-			tablet: "",
-			mobile: "",
-		};
+		const framedPaths: Partial<Record<BreakpointName, string>> = {};
 
 		for (const cap of captured.breakpoints) {
 			const frame = frameSet[cap.name];
