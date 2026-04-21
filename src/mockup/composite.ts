@@ -1,13 +1,9 @@
 // Copyright (c) 2026 84EM LLC (https://84em.io). MIT License.
 
 import sharp from "sharp";
+import type { BreakpointName } from "../types.js";
 
-interface FramedPaths {
-	desktop: string;
-	tablet: string;
-	mobile: string;
-}
-
+const ORDER: BreakpointName[] = ["desktop", "tablet", "mobile"];
 const GAP = 60;
 const PADDING = 80;
 
@@ -28,12 +24,21 @@ function parseBackground(bg: string): {
 }
 
 export async function stitch(
-	paths: FramedPaths,
+	paths: Partial<Record<BreakpointName, string>>,
 	background: string,
 ): Promise<Buffer> {
-	const order = [paths.desktop, paths.tablet, paths.mobile];
+	const orderedPaths = ORDER.map((name) => paths[name]).filter(
+		(p): p is string => typeof p === "string",
+	);
+	if (orderedPaths.length === 0) {
+		throw new Error("stitch requires at least one frame path");
+	}
+
 	const metas = await Promise.all(
-		order.map(async (p) => ({ path: p, meta: await sharp(p).metadata() })),
+		orderedPaths.map(async (p) => ({
+			path: p,
+			meta: await sharp(p).metadata(),
+		})),
 	);
 
 	for (const { path, meta } of metas) {
@@ -44,7 +49,9 @@ export async function stitch(
 
 	const widths = metas.map((m) => m.meta.width!);
 	const heights = metas.map((m) => m.meta.height!);
-	const totalWidth = widths.reduce((a, b) => a + b, 0) + GAP * 2 + PADDING * 2;
+	const gapCount = Math.max(0, metas.length - 1);
+	const totalWidth =
+		widths.reduce((a, b) => a + b, 0) + GAP * gapCount + PADDING * 2;
 	const maxHeight = Math.max(...heights);
 	const totalHeight = maxHeight + PADDING * 2;
 	const bg = parseBackground(background);

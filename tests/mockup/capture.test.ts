@@ -44,9 +44,38 @@ beforeEach(() => {
 });
 
 describe("captureAll", () => {
-	it("captures three breakpoints with the configured widths", async () => {
+	it("captures the default two breakpoints (desktop, mobile) with the configured widths", async () => {
 		const result = await captureAll({
 			url: "https://example.com",
+			breakpoints: ["desktop", "mobile"],
+			widths: [1440, 375],
+			use_device_emulation: false,
+			page_timeout_ms: 30000,
+			selector_timeout_ms: 10000,
+			wait_for_timeout: 300,
+			elements_to_hide: [],
+		});
+
+		expect(takeScreenshot).toHaveBeenCalledTimes(2);
+		expect(result.breakpoints).toHaveLength(2);
+		const calls = (
+			takeScreenshot as unknown as { mock: { calls: unknown[][] } }
+		).mock.calls;
+		expect((calls[0][0] as { viewport_width: number }).viewport_width).toBe(
+			1440,
+		);
+		expect((calls[1][0] as { viewport_width: number }).viewport_width).toBe(
+			375,
+		);
+		for (const call of calls) {
+			expect((call[0] as { full_page: boolean }).full_page).toBe(true);
+		}
+	});
+
+	it("captures three breakpoints when tablet is included", async () => {
+		const result = await captureAll({
+			url: "https://example.com",
+			breakpoints: ["desktop", "tablet", "mobile"],
 			widths: [1440, 768, 375],
 			use_device_emulation: false,
 			page_timeout_ms: 30000,
@@ -69,9 +98,6 @@ describe("captureAll", () => {
 		expect((calls[2][0] as { viewport_width: number }).viewport_width).toBe(
 			375,
 		);
-		for (const call of calls) {
-			expect((call[0] as { full_page: boolean }).full_page).toBe(true);
-		}
 	});
 
 	it("retries with domcontentloaded after a PAGE_LOAD_TIMEOUT error", async () => {
@@ -98,6 +124,7 @@ describe("captureAll", () => {
 		);
 		const out = await captureAll({
 			url: "https://example.com",
+			breakpoints: ["desktop", "tablet", "mobile"],
 			widths: [1440, 768, 375],
 			use_device_emulation: false,
 			page_timeout_ms: 30000,
@@ -123,6 +150,7 @@ describe("captureAll", () => {
 		await expect(
 			captureAll({
 				url: "https://example.com",
+				breakpoints: ["desktop", "tablet", "mobile"],
 				widths: [1440, 768, 375],
 				use_device_emulation: false,
 				page_timeout_ms: 30000,
@@ -145,6 +173,7 @@ describe("captureAll", () => {
 		await expect(
 			captureAll({
 				url: "https://example.com",
+				breakpoints: ["desktop", "tablet", "mobile"],
 				widths: [1440, 768, 375],
 				use_device_emulation: false,
 				page_timeout_ms: 30000,
@@ -157,9 +186,10 @@ describe("captureAll", () => {
 		expect(calls).toBe(1);
 	});
 
-	it("translates use_device_emulation into device_name for tablet and mobile only", async () => {
+	it("translates use_device_emulation into device_name only for the requested breakpoints", async () => {
 		await captureAll({
 			url: "https://example.com",
+			breakpoints: ["desktop", "tablet", "mobile"],
 			widths: [1440, 768, 375],
 			use_device_emulation: true,
 			page_timeout_ms: 30000,
@@ -177,6 +207,29 @@ describe("captureAll", () => {
 			"iPad Pro 11",
 		);
 		expect((calls[2][0] as { device_name?: string }).device_name).toBe(
+			"iPhone 13",
+		);
+	});
+
+	it("omits the tablet device_name entirely when tablet is not in breakpoints", async () => {
+		await captureAll({
+			url: "https://example.com",
+			breakpoints: ["desktop", "mobile"],
+			widths: [1440, 375],
+			use_device_emulation: true,
+			page_timeout_ms: 30000,
+			selector_timeout_ms: 10000,
+			wait_for_timeout: 300,
+			elements_to_hide: [],
+		});
+		const calls = (
+			takeScreenshot as unknown as { mock: { calls: unknown[][] } }
+		).mock.calls;
+		expect(calls.length).toBe(2);
+		expect(
+			(calls[0][0] as { device_name?: string }).device_name,
+		).toBeUndefined();
+		expect((calls[1][0] as { device_name?: string }).device_name).toBe(
 			"iPhone 13",
 		);
 	});
@@ -200,6 +253,7 @@ describe("captureAll", () => {
 		);
 		const out = await captureAll({
 			url: "https://example.com",
+			breakpoints: ["desktop", "tablet", "mobile"],
 			widths: [1440, 768, 375],
 			use_device_emulation: false,
 			page_timeout_ms: 30000,
@@ -211,17 +265,33 @@ describe("captureAll", () => {
 		expect(calls).toBe(4);
 	});
 
-	it("rejects widths arrays that are not exactly length 3", async () => {
+	it("rejects when widths length does not match breakpoints length", async () => {
 		await expect(
 			captureAll({
 				url: "https://example.com",
-				widths: [1440, 768] as unknown as [number, number, number],
+				breakpoints: ["desktop", "tablet", "mobile"],
+				widths: [1440, 768],
 				use_device_emulation: false,
 				page_timeout_ms: 30000,
 				selector_timeout_ms: 10000,
 				wait_for_timeout: 300,
 				elements_to_hide: [],
 			}),
-		).rejects.toThrow(/exactly three/i);
+		).rejects.toThrow(/widths length .* must match breakpoints length/i);
+	});
+
+	it("rejects an empty breakpoints array", async () => {
+		await expect(
+			captureAll({
+				url: "https://example.com",
+				breakpoints: [],
+				widths: [],
+				use_device_emulation: false,
+				page_timeout_ms: 30000,
+				selector_timeout_ms: 10000,
+				wait_for_timeout: 300,
+				elements_to_hide: [],
+			}),
+		).rejects.toThrow(/breakpoints/i);
 	});
 });
