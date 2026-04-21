@@ -23,7 +23,8 @@ async function generateDesktop({ outFile }) {
 	const screenY = 40;
 	const screenW = 1400;
 	const screenH = 800;
-	const standTop = screenY + screenH + 20; // 860
+	const bottomBezel = 40; // match top/side bezels
+	const standTop = screenY + screenH + bottomBezel + 8; // 888
 	const standNeckW = 220;
 	const standBaseW = 460;
 
