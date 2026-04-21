@@ -79,7 +79,10 @@ export async function captureAll(opts: CaptureOpts): Promise<CaptureAllResult> {
 			result = await takeScreenshot(baseParams);
 		} catch (err) {
 			const message = (err as Error).message;
-			if (opts.retry_on_timeout !== false && /timeout/i.test(message)) {
+			if (
+				opts.retry_on_timeout !== false &&
+				message.startsWith("PAGE_LOAD_TIMEOUT:")
+			) {
 				result = await takeScreenshot({
 					...baseParams,
 					wait_until: "domcontentloaded",

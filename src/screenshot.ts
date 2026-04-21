@@ -64,19 +64,35 @@ export async function takeScreenshot(
 
 		const page = await context.newPage();
 
-		await page.goto(params.url, {
-			waitUntil: params.wait_until ?? "networkidle",
-			timeout: pageTimeoutMs,
-		});
+		try {
+			await page.goto(params.url, {
+				waitUntil: params.wait_until ?? "networkidle",
+				timeout: pageTimeoutMs,
+			});
+		} catch (err) {
+			const e = err as Error;
+			if (e.name === "TimeoutError" || /timeout/i.test(e.message)) {
+				throw new Error(`PAGE_LOAD_TIMEOUT: ${e.message}`);
+			}
+			throw err;
+		}
 
 		// Wait for fonts to finish loading
 		await page.evaluate(() => document.fonts.ready);
 
 		// Wait for a specific selector if requested
 		if (params.wait_for_selector) {
-			await page.waitForSelector(params.wait_for_selector, {
-				timeout: selectorTimeoutMs,
-			});
+			try {
+				await page.waitForSelector(params.wait_for_selector, {
+					timeout: selectorTimeoutMs,
+				});
+			} catch (err) {
+				const e = err as Error;
+				if (e.name === "TimeoutError" || /timeout/i.test(e.message)) {
+					throw new Error(`SELECTOR_TIMEOUT: ${e.message}`);
+				}
+				throw err;
+			}
 		}
 
 		// Hide elements
