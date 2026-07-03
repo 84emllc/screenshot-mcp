@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - `generate_screenshot` now accepts `wait_until` (`load` | `domcontentloaded` | `networkidle` | `commit`), `page_timeout_ms`, and `selector_timeout_ms`. Lets SPAs and streaming pages that never reach `networkidle` be captured (e.g. with `wait_until: "load"` and a longer `page_timeout_ms`).
+- `generate_responsive_mockup` now accepts `device_scale_factor` (1–3, default 1). The page is captured at that DPR and the frame geometry + chrome are scaled to match, producing a true retina mockup (e.g. a 2960×2080 desktop frame at `device_scale_factor: 2`). Applies to non-emulated breakpoints; emulated breakpoints keep their device profile's DPR.
 
 ### Changed
 

@@ -121,6 +121,11 @@ export const tools: Tool[] = [
 					type: "boolean",
 					description: "Use Playwright device profiles (default: false)",
 				},
+				device_scale_factor: {
+					type: "number",
+					description:
+						"Capture and frame at this pixel density: 1 = standard, 2 = retina (default: 1). The screenshot is captured at this DPR and the frame is scaled to match, so output is a true 2x mockup. Applies to non-emulated breakpoints; emulated breakpoints use their device profile's DPR.",
+				},
 				fit_mode: {
 					type: "string",
 					enum: ["top-crop", "full"],

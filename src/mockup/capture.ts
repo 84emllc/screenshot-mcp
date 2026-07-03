@@ -11,6 +11,7 @@ export interface CaptureOpts {
 	breakpoints: BreakpointName[];
 	widths: number[];
 	use_device_emulation: boolean;
+	device_scale_factor?: number;
 	page_timeout_ms: number;
 	selector_timeout_ms: number;
 	wait_for_timeout: number;
@@ -66,7 +67,7 @@ export async function captureAll(opts: CaptureOpts): Promise<CaptureAllResult> {
 			output_path: outputPath,
 			viewport_width: width,
 			viewport_height: Math.round((width * 9) / 16),
-			device_scale_factor: 1,
+			device_scale_factor: opts.device_scale_factor ?? 1,
 			full_page: true,
 			wait_for_selector: opts.wait_for_selector,
 			wait_for_timeout: opts.wait_for_timeout,
