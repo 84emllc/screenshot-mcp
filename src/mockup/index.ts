@@ -157,6 +157,14 @@ export async function run(params: MockupParams): Promise<MockupResult> {
 		params.breakpoints ?? DEFAULT_BREAKPOINTS,
 	);
 	const widths = validateWidths(params.widths, breakpoints);
+	const scale = params.device_scale_factor ?? 1;
+	if (!Number.isInteger(scale) || scale < 1 || scale > 3) {
+		throw new Error(
+			`device_scale_factor must be an integer between 1 and 3, got ${String(
+				params.device_scale_factor,
+			)}`,
+		);
+	}
 
 	await ensureWritableDir(params.output_dir);
 
@@ -172,6 +180,7 @@ export async function run(params: MockupParams): Promise<MockupResult> {
 			breakpoints,
 			widths,
 			use_device_emulation: params.use_device_emulation ?? false,
+			device_scale_factor: scale,
 			page_timeout_ms: params.page_timeout_ms ?? 30000,
 			selector_timeout_ms: params.selector_timeout_ms ?? 10000,
 			wait_for_timeout: params.wait_for_timeout ?? 300,
@@ -187,7 +196,7 @@ export async function run(params: MockupParams): Promise<MockupResult> {
 
 		for (const cap of captured.breakpoints) {
 			const frame = frameSet[cap.name];
-			const buf = await frameImage(cap.path, frame, fit);
+			const buf = await frameImage(cap.path, frame, fit, scale);
 			const outPath = join(params.output_dir, `${prefix}-${cap.name}.png`);
 			await writeFile(outPath, buf);
 			writtenByThisRun.push(outPath);
@@ -196,7 +205,10 @@ export async function run(params: MockupParams): Promise<MockupResult> {
 			breakpointResults.push({
 				name: cap.name,
 				width: cap.width,
-				framed_dimensions: [frame.canvas.width, frame.canvas.height],
+				framed_dimensions: [
+					Math.round(frame.canvas.width * scale),
+					Math.round(frame.canvas.height * scale),
+				],
 				file_size_bytes: sizeStat.size,
 			});
 		}

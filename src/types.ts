@@ -61,6 +61,7 @@ export interface MockupParams {
 	widths?: number[];
 	frame_set?: string;
 	use_device_emulation?: boolean;
+	device_scale_factor?: number;
 	fit_mode?: FitMode;
 	composite?: boolean;
 	background?: string;
