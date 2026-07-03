@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-07-03
+
+### Added
+
+- `generate_screenshot` now accepts `wait_until` (`load` | `domcontentloaded` | `networkidle` | `commit`), `page_timeout_ms`, and `selector_timeout_ms`. Lets SPAs and streaming pages that never reach `networkidle` be captured (e.g. with `wait_until: "load"` and a longer `page_timeout_ms`).
+
+### Changed
+
+- `generate_screenshot` `elements_to_hide` now applies before AND after the settle wait, using `display: none !important`. Overlays that open on a timer after load (cookie bars, popup modals, chat widgets) now stay hidden in the final frame instead of reappearing.
+
 ## [1.2.0] - 2026-04-20
 
 ### Changed

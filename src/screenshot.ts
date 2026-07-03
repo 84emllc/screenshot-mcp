@@ -95,22 +95,35 @@ export async function takeScreenshot(
 			}
 		}
 
-		// Hide elements
-		if (elementsToHide.length > 0) {
+		// Hide elements. Applied with !important and re-applied after the settle
+		// wait, so overlays that open on a timer after load (cookie bars, popup
+		// modals, chat widgets) stay hidden in the final frame.
+		const hideElements = async () => {
+			if (elementsToHide.length === 0) return;
 			await page.evaluate((selectors: string[]) => {
 				for (const sel of selectors) {
 					const els = document.querySelectorAll(sel);
 					for (const el of els) {
-						(el as HTMLElement).style.display = "none";
+						(el as HTMLElement).style.setProperty(
+							"display",
+							"none",
+							"important",
+						);
 					}
 				}
 			}, elementsToHide);
-		}
+		};
 
-		// Extra wait for final paint
+		// Hide before the settle wait.
+		await hideElements();
+
+		// Extra wait for final paint (and for any timed overlays to appear).
 		if (waitTimeout > 0) {
 			await page.waitForTimeout(waitTimeout);
 		}
+
+		// Re-hide after the wait to catch overlays that opened during it.
+		await hideElements();
 
 		// Ensure output directory exists
 		await mkdir(dirname(params.output_path), { recursive: true });

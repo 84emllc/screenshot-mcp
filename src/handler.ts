@@ -35,6 +35,9 @@ export async function handleToolCall(
 					wait_for_selector: args.wait_for_selector as string | undefined,
 					wait_for_timeout: args.wait_for_timeout as number | undefined,
 					full_page: args.full_page as boolean | undefined,
+					wait_until: args.wait_until as ScreenshotParams["wait_until"],
+					page_timeout_ms: args.page_timeout_ms as number | undefined,
+					selector_timeout_ms: args.selector_timeout_ms as number | undefined,
 				};
 
 				const result = await takeScreenshot(params);

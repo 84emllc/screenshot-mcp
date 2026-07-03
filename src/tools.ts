@@ -42,7 +42,7 @@ export const tools: Tool[] = [
 					type: "array",
 					items: { type: "string" },
 					description:
-						"CSS selectors of elements to hide before taking the screenshot",
+						"CSS selectors to hide. Applied before and after the settle wait, so overlays that open on a timer (cookie bars, popup modals, chat widgets) stay hidden in the final frame.",
 				},
 				wait_for_selector: {
 					type: "string",
@@ -57,6 +57,20 @@ export const tools: Tool[] = [
 					type: "boolean",
 					description:
 						"Capture full scrollable page instead of viewport only (default: false)",
+				},
+				wait_until: {
+					type: "string",
+					enum: ["load", "domcontentloaded", "networkidle", "commit"],
+					description:
+						"Playwright navigation wait condition (default: networkidle). Use 'load' or 'domcontentloaded' for SPAs or streaming pages that never reach networkidle.",
+				},
+				page_timeout_ms: {
+					type: "number",
+					description: "Page load (navigation) timeout in ms (default: 30000)",
+				},
+				selector_timeout_ms: {
+					type: "number",
+					description: "wait_for_selector timeout in ms (default: 10000)",
 				},
 			},
 			required: ["url", "output_path"],
